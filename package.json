@@ -1,0 +1,12 @@
+{
+  "name": "comercial-volta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Comercial Volta · gestión de leads del comercial (Netlify + Airtable)",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev:mock": "node dev/server.mjs",
+    "test": "node dev/test.mjs"
+  }
+}
