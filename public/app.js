@@ -514,11 +514,11 @@ function renderResults() {
   const avgFc = fc.length ? fc.reduce((a, b) => a + b, 0) / fc.length : null;
   // embudo: cuántos han llegado al menos a cada etapa (todos los leads del filtro)
   const reach = st => { const i = S.L.STAGES.indexOf(st); return base.filter(l => S.L.STAGES.indexOf(maxStage(l)) >= i).length; };
-  const funnel = S.L.STAGES.filter(s => s !== "Perdido").map(s => ({ s, n: reach(s) }));
+  const funnel = S.L.STAGES.filter(s => s !== "Perdido" && s !== "No interesado").map(s => ({ s, n: reach(s) }));
   const top = funnel[0].n || 1;
   const bars = (items, fmt, color) => { const mx = Math.max(1, ...items.map(i => i.v)); return items.map(i => `<div class="bar-r"><span>${i.label}</span><div class="bar-t"><div class="bar-f" style="width:${i.v / mx * 100}%;background:${i.color || color || "var(--accent)"}"></div></div><span class="n">${fmt(i)}</span></div>`).join(""); };
   const lossR = S.L.LOSS.map(m => ({ label: esc(m), v: lost.filter(l => l.motivo === m).length })).filter(x => x.v);
-  const allLostP = base.filter(l => l.estado === "Perdido" && inP(l.cierre));
+  const noInt = base.filter(l => l.estado === "No interesado" && inP(l.cierre));
   const origins = S.L.ORIGINS.map(o => { const ls = base.filter(l => l.origen === o && inP(l.alta)); return { label: esc(o), v: ls.length, w: ls.filter(l => l.estado === "Ganado").length }; }).filter(x => x.v).sort((a, b) => b.v - a.v);
   const lineColor = { Litio: "var(--litio)", Plomo: "var(--plomo)", Ambas: "#8aa093" };
   root.innerHTML = `
@@ -530,14 +530,14 @@ function renderResults() {
   <div class="kpis">
     <div class="kpi"><small>Cartera abierta</small><b>${eurK(pipe)}</b><div class="s">${open.length} leads · ponderada ${eurK(weighted)}</div></div>
     <div class="kpi ok"><small>Ganados (${esc(label)})</small><b>${won.length}</b><div class="s">${eur(won.reduce((s, l) => s + l.valor, 0))}</div></div>
-    <div class="kpi ${lost.length ? "bad" : ""}"><small>Perdidos (${esc(label)})</small><b>${lost.length}</b><div class="s">${eur(lost.reduce((s, l) => s + l.valor, 0))}</div></div>
+    <div class="kpi ${lost.length ? "bad" : ""}"><small>Perdidos (${esc(label)})</small><b>${lost.length}</b><div class="s">${eur(lost.reduce((s, l) => s + l.valor, 0))}${noInt.length ? ` · ${noInt.length} no interesados` : ""}</div></div>
     <div class="kpi"><small>Tasa de cierre</small><b>${won.length + lost.length ? Math.round(won.length / (won.length + lost.length) * 100) + " %" : "—"}</b><div class="s">ganados / cerrados ${esc(label)}</div></div>
     <div class="kpi"><small>1er contacto</small><b>${avgFc == null ? "—" : avgFc < 1 ? Math.round(avgFc * 24) + " h" : avgFc.toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " d"}</b><div class="s">tiempo medio desde el alta (${fc.length} leads)</div></div>
   </div>
   <div class="grid2">
     <div class="card"><div class="card-h"><h2>Embudo</h2><span class="sub">Leads que han llegado a cada etapa · conversión desde la anterior</span></div>
       <div class="bars">${funnel.map((f, i) => `<div class="bar-r"><span>${stPill(f.s)}</span><div class="bar-t"><div class="bar-f" style="width:${f.n / top * 100}%"></div></div><span class="n">${f.n}${i ? ` <span class="conv">${funnel[i - 1].n ? Math.round(f.n / funnel[i - 1].n * 100) : 0} %</span>` : ""}</span></div>`).join("")}
-      <div class="hint">Total en el filtro: ${base.length} leads · ${base.filter(l => l.estado === "Perdido").length} perdidos en total.</div></div></div>
+      <div class="hint">Total en el filtro: ${base.length} leads · ${base.filter(l => l.estado === "Perdido").length} perdidos y ${base.filter(l => l.estado === "No interesado").length} no interesados en total.</div></div></div>
     <div class="card"><div class="card-h"><h2>Cartera abierta por línea</h2><span class="sub">Valor estimado de los leads abiertos</span></div>
       <div class="bars">${bars(["Litio", "Plomo", "Ambas"].map(x => { const ls = open.filter(l => l.linea === x); return { label: lnPill(x), v: ls.reduce((s, l) => s + l.valor, 0), n: ls.length, color: lineColor[x] }; }), i => `${eurK(i.v)} · ${i.n}`)}</div>
       <div class="card-h" style="border-top:1px solid var(--line)"><h2>Cartera por etapa</h2></div>
@@ -550,10 +550,10 @@ function renderResults() {
   $("#resP", root).onclick = e => { const b = e.target.closest("button"); if (b) { S.resPeriod = b.dataset.val; renderResults(); } };
   $("#resL", root).onclick = e => { const b = e.target.closest("button"); if (b) { S.resLinea = b.dataset.val; renderResults(); } };
   const rc = $("#resC", root); if (rc) rc.onchange = () => { S.resCom = rc.value; renderResults(); };
-  void allLostP;
+  void noInt;
 }
-const defProb = st => ({ Nuevo: 5, Contactado: 10, Interesado: 25, "Presupuesto enviado": 45, "Negociación": 70, Ganado: 100, Perdido: 0 }[st] ?? 0);
-const maxStage = l => { if (l.etapaMax) return l.etapaMax; return l.estado === "Perdido" ? "Nuevo" : l.estado; };
+const defProb = st => ({ Nuevo: 5, Contactado: 10, Interesado: 25, "Presupuesto enviado": 45, "Negociación": 70, Ganado: 100, "No interesado": 0, Perdido: 0 }[st] ?? 0);
+const maxStage = l => { if (l.etapaMax) return l.etapaMax; return l.estado === "Perdido" || l.estado === "No interesado" ? "Nuevo" : l.estado; };
 
 /* =================== FICHA DEL LEAD (panel lateral) =================== */
 let drawerDirty = false;
@@ -604,7 +604,7 @@ function segHtml(l) {
       <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">${hasPhone(x.tel) ? `<a class="btn sm" href="${telHref(x.tel)}">📞 ${esc(x.tel)}</a><a class="btn sm" target="_blank" rel="noopener" href="${waHref(x.tel)}">💬 WhatsApp</a>` : ""}${emailKeys(x.email).map(e => `<a class="btn sm" href="mailto:${esc(e)}">✉ ${esc(e)}</a>`).join("")}</span></div>`).join("")}</div>` : ""}
   <div class="box ${open && st === "none" ? "alert" : ""}">
     <h3>${open ? (st === "none" ? "⚠ Falta la próxima acción" : "Próxima acción") : "Lead cerrado"} ${open && st !== "none" ? dueHtml(l) : ""}</h3>
-    ${open ? `${nextFields("na", l)}<div class="row-btns"><button class="btn primary sm" id="naSave">Guardar próxima acción</button></div>` : `<p class="hint" style="margin:0">${l.estado === "Ganado" ? "Ganado" : "Perdido"}${l.cierre ? " el " + esc(nice(l.cierre)) : ""}${l.motivo ? " · Motivo: " + esc(l.motivo) + (l.motivoDetalle ? " (" + esc(l.motivoDetalle) + ")" : "") : ""}. Puedes reabrirlo cambiando el estado.</p>`}
+    ${open ? `${nextFields("na", l)}<div class="row-btns"><button class="btn primary sm" id="naSave">Guardar próxima acción</button></div>` : `<p class="hint" style="margin:0">${esc(l.estado)}${l.cierre ? " el " + esc(nice(l.cierre)) : ""}${l.motivo ? " · Motivo: " + esc(l.motivo) + (l.motivoDetalle ? " (" + esc(l.motivoDetalle) + ")" : "") : ""}. Puedes reabrirlo cambiando el estado.</p>`}
   </div>
   <div class="box"><h3>Estado</h3><div class="stages" id="stg">${S.L.STAGES.map(s => `<button class="${s === l.estado ? "on " + stCls(s) : ""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div></div>
   <div class="box" id="logBox"><h3>Registrar actividad</h3>

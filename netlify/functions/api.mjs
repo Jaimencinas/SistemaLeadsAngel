@@ -47,7 +47,8 @@ async function loadLead(id, s) {
 
 /* ---------- reglas del embudo ----------
    - «Perdido» exige motivo.
-   - Al cerrar (Ganado/Perdido) se guarda la fecha de cierre; si se reabre, se borra.
+   - «No interesado» no pide motivo; igual que «Perdido», sale de la cartera abierta.
+   - Al cerrar (Ganado/No interesado/Perdido) se guarda la fecha de cierre; si se reabre, se borra.
    - «Etapa máxima» recuerda hasta dónde llegó (para la conversión del embudo).
    - Salir de «Nuevo» marca el primer contacto si aún no lo tenía. */
 const stageIdx = s => STAGES.indexOf(s);
@@ -60,13 +61,14 @@ function stageFields(prev, estado, motivo, detalle) {
     out["Motivo pérdida"] = m; out["Detalle pérdida"] = str(detalle, 300);
   } else { out["Motivo pérdida"] = null; out["Detalle pérdida"] = ""; }
   out.Estado = estado;
-  const closed = x => x === "Ganado" || x === "Perdido";
+  const closed = x => x === "Ganado" || x === "Perdido" || x === "No interesado";
+  const dead = x => x === "Perdido" || x === "No interesado";
   if (closed(estado) && !(closed(before) && prev["Fecha cierre"])) out["Fecha cierre"] = new Date().toISOString().slice(0, 10);
   if (!closed(estado)) out["Fecha cierre"] = null;
-  if (estado !== "Perdido") {
-    const curMax = prev["Etapa máxima"] || (before !== "Perdido" ? before : "Nuevo");
+  if (!dead(estado)) {
+    const curMax = prev["Etapa máxima"] || (!dead(before) ? before : "Nuevo");
     out["Etapa máxima"] = stageIdx(estado) > stageIdx(curMax) ? estado : curMax;
-  } else if (!prev["Etapa máxima"]) out["Etapa máxima"] = before !== "Perdido" ? before : "Nuevo";
+  } else if (!prev["Etapa máxima"]) out["Etapa máxima"] = !dead(before) ? before : "Nuevo";
   if (estado !== "Nuevo" && !prev["Primer contacto"]) out["Primer contacto"] = new Date().toISOString();
   return out;
 }

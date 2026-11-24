@@ -20,13 +20,13 @@ for i, o in enumerate(src):
 demo = [(2,'Contactado','Llamar',-2,'Volver a llamar a compras'),(5,'Interesado','Enviar presupuesto',0,'Presupuesto AGM para flota'),
         (20,'Presupuesto enviado','Llamar',3,'Confirmar si han recibido el presupuesto'),(12,'Negociación','Visita',5,'Visita a Sintra'),
         (24,'Contactado','Email',1,'Enviar catálogo de plomo'),(46,'Interesado',None,None,None),(33,'Ganado',None,None,None),(60,'Perdido',None,None,None),
-        (19,'Contactado','WhatsApp',0,'Mandar fotos de la batería de tracción'),(57,'Presupuesto enviado','Llamar',-1,'Seguimiento presupuesto')]
+        (19,'Contactado','WhatsApp',0,'Mandar fotos de la batería de tracción'),(57,'Presupuesto enviado','Llamar',-1,'Seguimiento presupuesto'),(40,'No interesado',None,None,None),(62,'No interesado',None,None,None)]
 order = L['STAGES']
 for i, est, acc, dd, nota in demo:
-    l = leads[i]; l['estado'] = est; l['etapaMax'] = 'Interesado' if est == 'Perdido' else est
+    l = leads[i]; l['estado'] = est; l['etapaMax'] = 'Interesado' if est == 'Perdido' else 'Contactado' if est == 'No interesado' else est
     pc = D.datetime.combine(today - D.timedelta(days=15 - i % 7), D.time(10, 30)); l['primerContacto'] = pc.isoformat()+'Z'
     l['acts'].append(dict(id=l['id']+'a1', lead=l['id'], tipo='Llamada', fecha=pc.isoformat()+'Z', resultado='Hablado', texto='Primera llamada de presentación de Volta Baterías. (Actividad de demostración)', contacto=l['contacts'][0]['nombre'], comercial='Ángel', origen='Manual', resumen='Llamada · Hablado'))
-    if est in ('Ganado','Perdido'): l['cierre'] = iso(today - D.timedelta(days=3))
+    if est in ('Ganado','Perdido','No interesado'): l['cierre'] = iso(today - D.timedelta(days=3))
     if est == 'Perdido': l['motivo'] = 'Precio'; l['motivoDetalle'] = 'Se queda con su proveedor actual'
     if acc: l['accion'] = acc; l['accionFecha'] = iso(today + D.timedelta(days=dd)); l['accionNota'] = nota
 seed = dict(leads=leads, users=[dict(rid='recUSERadmin00001', id='admin', name='Jaime', role='admin', active=True, code='111111'),

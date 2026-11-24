@@ -27,11 +27,12 @@
     const before = l.estado;
     if (estado === "Perdido") { if (!L.LOSS.includes(motivo)) throw new Err(400, "Para marcar un lead como «Perdido» hay que elegir el motivo."); l.motivo = motivo; l.motivoDetalle = detalle || ""; }
     else { l.motivo = ""; l.motivoDetalle = ""; }
-    const closed = x => x === "Ganado" || x === "Perdido";
+    const closed = x => x === "Ganado" || x === "Perdido" || x === "No interesado";
+    const dead = x => x === "Perdido" || x === "No interesado";
     if (closed(estado) && !(closed(before) && l.cierre)) l.cierre = today();
     if (!closed(estado)) l.cierre = null;
-    const curMax = l.etapaMax || (before !== "Perdido" ? before : "Nuevo");
-    if (estado !== "Perdido") l.etapaMax = idx(estado) > idx(curMax) ? estado : curMax; else l.etapaMax = curMax;
+    const curMax = l.etapaMax || (!dead(before) ? before : "Nuevo");
+    if (!dead(estado)) l.etapaMax = idx(estado) > idx(curMax) ? estado : curMax; else l.etapaMax = curMax;
     if (estado !== "Nuevo" && !l.primerContacto) l.primerContacto = now();
     l.estado = estado;
     if (before !== estado && s) l.acts.unshift({ id: rid(), lead: l.id, tipo: "Cambio de estado", fecha: now(), resultado: "", texto: estado === "Perdido" ? "Motivo: " + motivo + (detalle ? " · " + detalle : "") : "", contacto: "", comercial: s.name, origen: "Manual", resumen: `Estado: ${before} → ${estado}` });

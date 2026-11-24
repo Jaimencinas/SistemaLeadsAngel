@@ -16,7 +16,9 @@ export const ENV = {
 export const T = { leads: "Empresas", contacts: "Contactos", acts: "Actividades", users: "Usuarios", files: "Archivos" };
 
 /* ---------- listas (deben coincidir con las opciones de Airtable; typecast añade las nuevas) ---------- */
-export const STAGES = ["Nuevo", "Contactado", "Interesado", "Presupuesto enviado", "Negociación", "Ganado", "Perdido"];
+export const STAGES = ["Nuevo", "Contactado", "Interesado", "No interesado", "Presupuesto enviado", "Negociación", "Ganado", "Perdido"];
+// «No interesado» y «Perdido» quedan fuera del embudo abierto (no piden próxima acción ni cuentan en la cartera).
+export const DEAD = ["No interesado", "Perdido"];
 export const OPEN = ["Nuevo", "Contactado", "Interesado", "Presupuesto enviado", "Negociación"];
 export const LOSS = ["Precio", "Competencia", "No responde", "No interesa", "Otro"];
 export const ACTIONS = ["Llamar", "WhatsApp", "Email", "Visita", "Enviar presupuesto"];

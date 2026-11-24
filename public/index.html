@@ -59,6 +59,7 @@ nav.tabs .cnt{font-family:"IBM Plex Mono";font-size:12px;background:var(--bad);c
 .st-Interesado{background:var(--warn-soft);color:var(--warn)}
 .st-Presupuesto{background:var(--accent-soft);color:var(--accent)}
 .st-Negociación{background:var(--purple-soft);color:var(--purple)}
+.st-No{background:#e9e4dd;color:#6d5f4e}
 .st-Ganado{background:var(--ok-soft);color:var(--ok)}
 .st-Perdido{background:var(--bad-soft);color:var(--bad)}
 .tag{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:1px 8px;font-size:12px;color:var(--ink2)}
@@ -107,13 +108,13 @@ main{padding:24px 32px 70px}
 .seg button.on .lnd{outline:1.5px solid #fff}
 
 /* ---------- Kanban ---------- */
-.kanban{display:grid;grid-template-columns:repeat(7,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:10px;align-items:start}
+.kanban{display:grid;grid-template-columns:repeat(8,minmax(220px,1fr));gap:12px;overflow-x:auto;padding-bottom:10px;align-items:start}
 .col{background:#ebebe8;border-radius:8px;min-height:200px;display:flex;flex-direction:column}
 .col.over{outline:2px dashed var(--accent);outline-offset:-2px;background:#f1e7e1}
 .col-h{padding:10px 12px 8px;border-bottom:3px solid var(--line)}
 .col-h b{font-family:"Barlow Condensed";font-size:20px;display:flex;justify-content:space-between;align-items:center}
 .col-h .sum{font-family:"IBM Plex Mono";font-size:12px;color:var(--ink2)}
-.col[data-st="Ganado"] .col-h{border-bottom-color:var(--ok)}.col[data-st="Perdido"] .col-h{border-bottom-color:var(--bad)}
+.col[data-st="Ganado"] .col-h{border-bottom-color:var(--ok)}.col[data-st="No interesado"] .col-h{border-bottom-color:#a8957c}.col[data-st="Perdido"] .col-h{border-bottom-color:var(--bad)}
 .col-b{padding:8px;display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 290px);overflow:auto}
 .kc{background:#fff;border:1px solid var(--line);border-left:4px solid #bbb;border-radius:6px;padding:9px 10px;cursor:grab;font-size:13px}
 .kc:active{cursor:grabbing}

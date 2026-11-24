@@ -13,7 +13,8 @@ CRM sencillo para el comercial de Volta Baterías (líneas **Litio** y **Plomo**
   - leads sin próxima acción (en rojo);
   - leads nuevos sin contactar;
   - lo programado para los próximos 7 días.
-- **Embudo (Kanban):** columnas Nuevo → Contactado → Interesado → Presupuesto enviado → Negociación → Ganado / Perdido.
+- **Embudo (Kanban):** columnas Nuevo → Contactado → Interesado → No interesado → Presupuesto enviado → Negociación → Ganado / Perdido.
+  - «No interesado» no pide motivo y sale de la cartera abierta (no necesita próxima acción).
   - Las tarjetas se arrastran para cambiar de estado.
   - Al soltar en «Perdido» pide el motivo.
   - Filtros: línea, tipo de cliente, origen, provincia/ciudad y búsqueda de texto.
