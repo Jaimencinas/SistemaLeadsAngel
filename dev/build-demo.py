@@ -39,4 +39,8 @@ scripts = ("<script>window.__DEMO_LISTS=" + json.dumps(L, ensure_ascii=False) + 
 assert '<script src="app.js"></script>' in html
 html = html.replace('<script src="app.js"></script>', scripts.replace('</script>\n<script>', '</script>\n<script>'))
 html = html.replace('<body>\n', '<body>\n' + banner + '\n', 1).replace('<title>Comercial Volta · Leads</title>', '<title>Comercial Volta · DEMO</title>')
+import base64
+tpl = base64.b64encode(open('public/plantilla-leads.xlsx','rb').read()).decode()
+assert 'href="plantilla-leads.xlsx"' in html
+html = html.replace('href="plantilla-leads.xlsx"', 'href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + tpl + '"')
 open(out, 'w').write(html); print(len(html), 'bytes')

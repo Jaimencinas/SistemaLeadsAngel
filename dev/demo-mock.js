@@ -131,7 +131,7 @@
       case "reassign": admin(); db.leads.forEach(l => { if (body.ids.includes(l.id)) l.comercial = body.comercial; }); return { ok: true };
       case "importLeads": {
         admin();
-        for (const r of body.rows) { const l = blank(); applyFields(l, { ...r, accion: "" }, s, true); if (!l.origen) l.origen = "Prospección comercial"; saveContacts(l, (r.contacto || r.tel || r.email) ? [{ nombre: r.contacto, cargo: r.cargo, tel: r.tel, email: r.email, principal: true }] : []); db.leads.push(l); }
+        for (const r of body.rows) { const l = blank(); applyFields(l, { ...r, accion: r.accion || "" }, s, true); if (!l.origen) l.origen = "Prospección comercial"; saveContacts(l, (r.contacto || r.tel || r.email) ? [{ nombre: r.contacto, cargo: r.cargo, tel: r.tel, email: r.email, principal: true }] : []); db.leads.push(l); }
         return { ok: true, created: body.rows.length };
       }
       case "saveUser": {

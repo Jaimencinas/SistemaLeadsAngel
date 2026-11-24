@@ -937,7 +937,11 @@ function renderSettings() {
     <div class="card"><div class="card-h"><h2>Importar leads</h2><span class="sub">Desde CSV o Excel</span></div>
       <div style="padding:16px 20px">
         <p style="margin-top:0">Sube un archivo con una fila por empresa. Podrás elegir qué columna es cada dato y verás los duplicados antes de importar.</p>
-        <label class="btn primary">⇪ Elegir archivo (.csv, .xlsx)<input type="file" id="impFile" accept=".csv,.txt,.xlsx,.xls" hidden></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn" id="tplBtn" href="plantilla-leads.xlsx" download="Plantilla leads Comercial Volta.xlsx" title="Excel con las columnas correctas y listas desplegables">⤓ Descargar plantilla Excel</a>
+          <label class="btn primary">⇪ Elegir archivo (.csv, .xlsx)<input type="file" id="impFile" accept=".csv,.txt,.xlsx,.xls" hidden></label>
+        </div>
+        <p class="hint" style="margin-bottom:0">Consejo: descarga la plantilla, rellena una fila por empresa en la hoja «Leads» y súbela aquí. Solo «Empresa» es obligatoria.</p>
         <div id="impArea" style="margin-top:14px"></div>
       </div></div>
   </div>`;
@@ -973,8 +977,18 @@ const IMP_FIELDS = [
   ["origen", "Origen", /origen|fuente|canal/],
   ["valor", "Valor estimado (€)", /valor|importe|€|potencial €|oportunidad/],
   ["potencial", "Potencial", /^potencial/],
-  ["notas", "Notas", /nota|observ|comentario|acci[oó]n/],
+  ["accion", "Próxima acción", /^proxima accion$|^accion$|siguiente paso/],
+  ["accionFecha", "Fecha próxima acción", /fecha/],
+  ["notas", "Notas", /^notas?$|observ|comentario/],
 ];
+// Fecha de Excel o CSV -> AAAA-MM-DD (acepta 25/11/2026, 25-11-26, 2026-11-25 y nº de serie de Excel)
+function impDate(v) {
+  const s = String(v || "").trim(); if (!s) return "";
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+  m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/); if (m) { const y = m[3].length === 2 ? "20" + m[3] : m[3]; return `${y}-${pad(m[2])}-${pad(m[1])}`; }
+  if (/^\d{5}$/.test(s)) { const d = new Date(Date.UTC(1899, 11, 30) + Number(s) * 864e5); return d.toISOString().slice(0, 10); }
+  return "";
+}
 function parseCsv(text) {
   const first = text.split(/\r?\n/).find(l => l.trim()) || "";
   const sep = (first.match(/;/g) || []).length >= (first.match(/,/g) || []).length ? ";" : (first.includes("\t") ? "\t" : ",");
@@ -1004,7 +1018,7 @@ async function startImport(file, area) {
   if (!names.length) { area.innerHTML = `<div class="err-banner">El archivo no tiene datos.</div>`; return; }
   // hoja por defecto: la que tenga más filas con una columna «empresa»
   const score = n => { const h = headerRow(sheets[n]); return h < 0 ? 0 : sheets[n].length - h; };
-  let sheet = names.slice().sort((a, b) => score(b) - score(a))[0];
+  let sheet = names.find(n => /^leads$/i.test(n)) || names.slice().sort((a, b) => score(b) - score(a))[0];
   const draw = () => {
     const rowsAll = sheets[sheet]; const h = Math.max(0, headerRow(rowsAll));
     const head = rowsAll[h].map(c => String(c).trim());
@@ -1025,8 +1039,8 @@ async function startImport(file, area) {
           <label class="f">Línea si no viene${sel("impLin", S.L.LINES, "")}</label>
         </div>
         <label class="hint" style="display:flex;gap:6px;align-items:center;margin-bottom:10px"><input type="checkbox" id="impSkip" checked> No importar los ${ndup} posibles duplicados</label>
-        <div class="tbl-wrap" style="max-height:340px;border:1px solid var(--line);border-radius:6px"><table class="tbl"><thead><tr><th>Empresa</th><th>Contacto</th><th>Teléfono</th><th>Email</th><th>Tipo</th><th>Línea</th><th>Valor</th><th>¿Duplicado?</th></tr></thead><tbody>
-          ${rows.slice(0, 200).map(r => `<tr style="${r.dup.length ? "background:#fff8e6" : ""}"><td><b>${esc(r.empresa)}</b><div class="hint">${esc([r.ciudad, r.pais].filter(Boolean).join(" · "))}</div></td><td>${esc(r.contacto)}</td><td class="mono">${esc(r.tel)}</td><td>${esc(r.email)}</td><td>${esc(r.tipo)}</td><td>${r.linea ? lnPill(r.linea) : ""}</td><td class="num">${r.valor ? eur(r.valor) : ""}</td><td>${r.dup.length ? `<span style="color:var(--warn);font-weight:600">${esc(r.dup.join("; "))}</span>` : "—"}</td></tr>`).join("")}
+        <div class="tbl-wrap" style="max-height:340px;border:1px solid var(--line);border-radius:6px"><table class="tbl"><thead><tr><th>Empresa</th><th>Contacto</th><th>Teléfono</th><th>Email</th><th>Tipo</th><th>Línea</th><th>Valor</th><th>Próxima acción</th><th>¿Duplicado?</th></tr></thead><tbody>
+          ${rows.slice(0, 200).map(r => `<tr style="${r.dup.length ? "background:#fff8e6" : ""}"><td><b>${esc(r.empresa)}</b><div class="hint">${esc([r.ciudad, r.pais].filter(Boolean).join(" · "))}</div></td><td>${esc(r.contacto)}</td><td class="mono">${esc(r.tel)}</td><td>${esc(r.email)}</td><td>${esc(r.tipo)}</td><td>${r.linea ? lnPill(r.linea) : ""}</td><td class="num">${r.valor ? eur(r.valor) : ""}</td><td>${r.accion ? esc(r.accion + " · " + short(r.accionFecha)) : `<span class="noact">sin acción</span>`}</td><td>${r.dup.length ? `<span style="color:var(--warn);font-weight:600">${esc(r.dup.join("; "))}</span>` : "—"}</td></tr>`).join("")}
         </tbody></table></div>
         <div class="row-btns"><span class="hint" id="impMsg" style="margin-right:auto">${rows.length} filas con nombre${rows.length > 200 ? " (vista previa de 200)" : ""} · ${ndup} posibles duplicados</span><button class="btn primary" id="impGo" ${rows.length ? "" : "disabled"}>Importar</button></div>`;
       const ss = $("#impSheet", area); if (ss) ss.onchange = () => { sheet = ss.value; draw(); };
@@ -1058,7 +1072,8 @@ function buildImpRow(r, map) {
   const valor = Number(String(g("valor")).replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".")) || 0;
   const notas = [g("notas"), tipoRaw && !tipo ? "Sector: " + tipoRaw : ""].filter(Boolean).join("\n");
   return { empresa: g("empresa"), contacto: g("contacto"), cargo: g("cargo"), tel: g("tel"), email: g("email"), cif: g("cif"), pais, provincia: g("provincia"), ciudad: g("ciudad"), web: /^https?:|^www\./i.test(g("web")) ? g("web") : "",
-    tipo, linea: fuzzy(g("linea"), S.L.LINES), origen: fuzzy(g("origen"), S.L.ORIGINS), valor, potencial: fuzzy(g("potencial"), S.L.POTENTIAL), notas };
+    tipo, linea: fuzzy(g("linea"), S.L.LINES), origen: fuzzy(g("origen"), S.L.ORIGINS), valor, potencial: fuzzy(g("potencial"), S.L.POTENTIAL), notas,
+    ...(() => { const a = fuzzy(g("accion"), S.L.ACTIONS), f = impDate(g("accionFecha")); return a && f ? { accion: a, accionFecha: f } : a ? { accion: a, accionFecha: todayS() } : {}; })() };
 }
 function localDupes(r) {
   const out = [], pk = phoneKey(r.tel), eks = emailKeys(r.email), ck = cifKey(r.cif), nk = nameKey(r.empresa);
