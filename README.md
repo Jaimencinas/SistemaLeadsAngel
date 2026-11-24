@@ -68,7 +68,7 @@ dev/test.mjs                   Prueba automática en navegador
 
 ## Desplegar en Netlify (una sola vez)
 
-1. En Netlify, entra en **Add new site → Import an existing project → GitHub** y elige `Jaimencinas/ComercialVolta`. No hay que tocar la compilación, porque `netlify.toml` ya lo indica todo.
+1. En Netlify, entra en **Add new site → Import an existing project → GitHub** y elige `Jaimencinas/SistemaLeadsAngel`. No hay que tocar la compilación, porque `netlify.toml` ya lo indica todo.
 2. En **Site configuration → Environment variables**, añade estas variables y márcalas como **secretas**:
 
    | Variable | Valor |
