@@ -74,7 +74,7 @@ dev/test.mjs                   Prueba automática en navegador
    | Variable | Valor |
    |---|---|
    | `AIRTABLE_TOKEN` | Token personal de Airtable (ver abajo) |
-   | `AIRTABLE_BASE_ID` | `appeqmeuX4vlQUpuK` (la base «Comercial Volta · Leads») |
+   | `AIRTABLE_BASE_ID` | El identificador de la base «Comercial Volta · Leads» (empieza por `app…`; está en la dirección de la base en Airtable) |
    | `SESSION_SECRET` | Una frase larga y aleatoria, de al menos 40 caracteres |
    | `ANTHROPIC_API_KEY` | *(Opcional)* Clave de la API de Claude para «Ordenar con IA» |
 
