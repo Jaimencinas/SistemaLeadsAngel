@@ -16,24 +16,21 @@ for i, o in enumerate(src):
         adjuntos=[], alta=(D.datetime.combine(today - D.timedelta(days=20), D.time(9))).isoformat()+'Z', primerContacto=None, cierre=None, ref=o['ref'],
         holdedId='', kommoId='', clickup='',
         contacts=[dict(id=lid+'c', lead=lid, nombre=c['nombre'] or 'Contacto', cargo=c['cargo'] or '', area='', tel=tel, email=c['email'] or '', principal=True)], acts=[]))
-# movimientos inventados para que se vea el embudo
-demo = [(2,'Contactado','Llamar',-2,'Volver a llamar a compras'),(5,'Interesado','Enviar presupuesto',0,'Presupuesto AGM para flota'),
-        (20,'Presupuesto enviado','Llamar',3,'Confirmar si han recibido el presupuesto'),(12,'Negociación','Visita',5,'Visita a Sintra'),
-        (24,'Contactado','Email',1,'Enviar catálogo de plomo'),(46,'Interesado',None,None,None),(33,'Ganado',None,None,None),(60,'Perdido',None,None,None),
-        (19,'Contactado','WhatsApp',0,'Mandar fotos de la batería de tracción'),(57,'Presupuesto enviado','Llamar',-1,'Seguimiento presupuesto'),(40,'No interesado',None,None,None),(62,'No interesado',None,None,None)]
-order = L['STAGES']
-for i, est, acc, dd, nota in demo:
-    l = leads[i]; l['estado'] = est; l['etapaMax'] = 'Interesado' if est == 'Perdido' else 'Contactado' if est == 'No interesado' else est
-    pc = D.datetime.combine(today - D.timedelta(days=15 - i % 7), D.time(10, 30)); l['primerContacto'] = pc.isoformat()+'Z'
-    l['acts'].append(dict(id=l['id']+'a1', lead=l['id'], tipo='Llamada', fecha=pc.isoformat()+'Z', resultado='Hablado', texto='Primera llamada de presentación de Volta Baterías. (Actividad de demostración)', contacto=l['contacts'][0]['nombre'], comercial='Ángel', origen='Manual', resumen='Llamada · Hablado'))
-    if est in ('Ganado','Perdido','No interesado'): l['cierre'] = iso(today - D.timedelta(days=3))
-    if est == 'Perdido': l['motivo'] = 'Precio'; l['motivoDetalle'] = 'Se queda con su proveedor actual'
-    if acc: l['accion'] = acc; l['accionFecha'] = iso(today + D.timedelta(days=dd)); l['accionNota'] = nota
+# estados tal como estaban en el Excel: «Email dd/mm/aa» -> Contactado (con el email en el historial)
+import openpyxl
+xl = openpyxl.load_workbook(sys.argv[4], data_only=True)['Pipeline de Prospectos'] if len(sys.argv) > 4 else None
+byref = {str(l['ref']): l for l in leads}
+for r in (xl.iter_rows(min_row=5, max_row=200, values_only=True) if xl else []):
+    if not r[1] or not r[8] or str(r[0]) not in byref: continue
+    l = byref[str(r[0])]; d, m, y = str(r[8]).split()[1].split('/'); f = f"20{y}-{m}-{d}T09:00:00Z"
+    l['estado'] = 'Contactado'; l['etapaMax'] = 'Contactado'; l['primerContacto'] = f; l['alta'] = f
+    l['acts'].append(dict(id=l['id']+'a1', lead=l['id'], tipo='Email', fecha=f, resultado='Enviado', texto='Email de presentación enviado (dato del Excel de prospección).', contacto=l['contacts'][0]['nombre'], comercial='Ángel', origen='Importación', resumen='Email · Enviado'))
+    if r[9]: l['accion'] = 'Llamar'; l['accionFecha'] = r[9].strftime('%Y-%m-%d'); l['accionNota'] = 'Próximo contacto previsto en el Excel'
 seed = dict(leads=leads, users=[dict(rid='recUSERadmin00001', id='admin', name='Jaime', role='admin', active=True, code='111111'),
                                 dict(rid='recUSERangel00001', id='angel', name='Ángel', role='sales', active=True, code='222222')])
 html = open('public/index.html').read(); app = open('public/app.js').read(); mock = open('dev/demo-mock.js').read()
 banner = '''<div style="background:#1d1f22;color:#fff;font:13px 'IBM Plex Sans',sans-serif;padding:7px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-<b style="color:#f6c9b5">MODO DEMOSTRACIÓN</b><span>Tus 68 prospectos del Excel con algunos movimientos inventados. Los cambios solo se guardan en este navegador; no toca Airtable.</span>
+<b style="color:#f6c9b5">MODO DEMOSTRACIÓN</b><span>Tus 68 prospectos tal como estaban en el Excel. Los cambios solo se guardan en este navegador; no toca Airtable.</span>
 <span style="margin-left:auto">Códigos: <b>111111</b> Jaime (admin) · <b>222222</b> Ángel</span><button onclick="__resetDemo()" style="background:#fff;color:#1d1f22;border:0;border-radius:6px;padding:3px 10px;cursor:pointer;font-weight:600">Reiniciar demo</button></div>'''
 scripts = ("<script>window.__DEMO_LISTS=" + json.dumps(L, ensure_ascii=False) + ";window.__DEMO_SEED=" + json.dumps(seed, ensure_ascii=False) + ";</script>\n<script>" + mock + "</script>\n<script>" + app + "</script>")
 assert '<script src="app.js"></script>' in html
